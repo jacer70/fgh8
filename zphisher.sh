@@ -297,7 +297,7 @@ about() {
 }
 
 ## Setup website and start php server
-HOST='127.0.0.1'
+HOST='127.0.0.2'
 PORT='3000'
 
 setup_site() {
