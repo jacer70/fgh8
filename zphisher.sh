@@ -298,7 +298,7 @@ about() {
 
 ## Setup website and start php server
 HOST='127.0.0.1'
-PORT='8080'
+PORT='3000'
 
 setup_site() {
 	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} Setting up server..."${WHITE}
