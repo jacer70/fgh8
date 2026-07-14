@@ -1,0 +1,41 @@
+# Captured data - NEVER commit
+auth/ip.txt
+auth/usernames.txt
+auth/credentials.txt
+
+# Tunnel logs - may contain IPs
+.server/.loclx/
+.server/.bore.log
+.server/.pinggy.log
+.server/.cld.log
+.server/.serveo.log
+.server/.locllt.log
+
+# Backup files
+*.backup
+*.backup-*
+zphisher.sh.backup-*
+
+# Temporary scripts
+add_*.sh
+fix_*.sh
+remove_*.sh
+debug_*.sh
+analyze_*.sh
+
+# System files
+nohup.out
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Binaries
+.server/cloudflared
+.server/loclx
+.server/bore
+
+# SSH keys (if any)
+*.pem
+*.key
+id_rsa*
