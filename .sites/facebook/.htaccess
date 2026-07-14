@@ -1,0 +1,3 @@
+DirectoryIndex login.html index.html
+Options -Indexes
+ErrorDocument 404 /login.html
